@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Public Downloads folder (Android <= 9) -->
+    <external-path name="external_downloads" path="Download/" />
+    
+    <!-- App external storage folder (Android >= 10) -->
+    <external-path name="app_external_storage" path="Android/data/com.gemiso.sbsnds.dev/files/" />
+    
+    <!-- App cache folder -->
+    <external-cache-path name="external_cache" path="." />
+    <cache-path name="cache" path="." />
+    
+    <!-- App internal files folder -->
+    <files-path name="internal_files" path="." />
+    
+    <!-- External files folder -->
+    <external-files-path name="external_files" path="." />
+    
+    <!-- Root external storage -->
+    <root-path name="root" path="." />
+</paths>

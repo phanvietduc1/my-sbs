@@ -29,11 +29,17 @@ jobs:
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: '3.0'
+        ruby-version: '3.1'
         bundler-cache: false
+      # Ruby 3.1 is required for bundler 2.6.8 (specified in Gemfile.lock)
+      # The action will install bundler automatically, but Ruby 3.1 supports it
 
     - name: Install CocoaPods
-      run: gem install cocoapods
+      run: |
+        # Install CocoaPods directly using gem
+        # We don't use bundler for CocoaPods installation to avoid conflicts
+        gem install cocoapods --no-document
+        pod --version
 
     - name: Install dependencies
       run: npm install

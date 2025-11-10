@@ -1,0 +1,232 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Setup Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Install CocoaPods dependencies
+      run: |
+        cd ios
+        pod install
+        cd ..
+
+    - name: Import signing certificate
+      uses: apple-actions/import-codesign-certs@v2
+      with:
+        p12-file-base64: ${{ secrets.IOS_CERT_P12 }}
+        p12-password: ${{ secrets.IOS_CERT_PASSWORD }}
+
+    - name: Install provisioning profile
+      id: install_profile
+      run: |
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/vDuc.mobileprovision
+        
+        # Extract UUID and other info from provisioning profile
+        PROFILE_UUID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/vDuc.mobileprovision 2>/dev/null | plutil -extract UUID raw -)
+        PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/vDuc.mobileprovision 2>/dev/null | plutil -extract Name raw -)
+        PROFILE_BUNDLE_ID=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/vDuc.mobileprovision 2>/dev/null | plutil -extract Entitlements.application-identifier raw - | sed 's/.*\.//')
+        
+        if [ -n "$PROFILE_UUID" ]; then
+          echo "Provisioning profile UUID: $PROFILE_UUID"
+          echo "Provisioning profile Name: $PROFILE_NAME"
+          echo "Provisioning profile Bundle ID: $PROFILE_BUNDLE_ID"
+          echo "profile_uuid=$PROFILE_UUID" >> $GITHUB_OUTPUT
+          echo "profile_name=$PROFILE_NAME" >> $GITHUB_OUTPUT
+          # Also install with UUID as filename (required by xcodebuild)
+          cp ~/Library/MobileDevice/Provisioning\ Profiles/vDuc.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/${PROFILE_UUID}.mobileprovision
+        else
+          echo "Error: Could not extract UUID from provisioning profile"
+          exit 1
+        fi
+
+    - name: Create export options plist
+      run: |
+        cat > ios/ExportOptions.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>method</key>
+            <string>ad-hoc</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>teamID</key>
+            <string>${{ secrets.IOS_TEAM_ID }}</string>
+            <key>provisioningProfiles</key>
+            <dict>
+                <key>com.gemiso.sbsnds.dev</key>
+                <string>${{ steps.install_profile.outputs.profile_uuid }}</string>
+            </dict>
+            <key>compileBitcode</key>
+            <false/>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>thinning</key>
+            <string>none</string>
+        </dict>
+        </plist>
+        EOF
+
+    - name: Verify certificates and profiles
+      id: verify_certs
+      run: |
+        echo "=== Checking installed certificates ==="
+        ALL_CERTS=$(security find-identity -v -p codesigning)
+        echo "$ALL_CERTS"
+        DIST_CERTS=$(echo "$ALL_CERTS" | grep "Apple Distribution" || echo "")
+        if [ -z "$DIST_CERTS" ]; then
+          echo "ERROR: No Apple Distribution certificate found in keychain"
+          exit 1
+        fi
+        echo ""
+        echo "=== Checking provisioning profiles ==="
+        ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory found"
+        echo ""
+        echo "=== Verifying certificate and profile match ==="
+        # Extract certificate from provisioning profile
+        PROFILE_PLIST=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/vDuc.mobileprovision 2>/dev/null)
+        if [ -z "$PROFILE_PLIST" ]; then
+          echo "ERROR: Could not decode provisioning profile"
+          exit 1
+        fi
+        
+        # Extract certificate common names from provisioning profile
+        echo "Certificates in provisioning profile:"
+        PROFILE_CERTS=$(echo "$PROFILE_PLIST" | plutil -extract DeveloperCertificates - - 2>/dev/null || echo "")
+        if [ -n "$PROFILE_CERTS" ]; then
+          echo "$PROFILE_PLIST" | plutil -extract DeveloperCertificates - - 2>/dev/null | while IFS= read -r cert_data; do
+            if [ -n "$cert_data" ] && [ "$cert_data" != "(" ] && [ "$cert_data" != ")" ]; then
+              CERT_SUBJECT=$(echo "$cert_data" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed 's/subject=//' || echo "")
+              CERT_CN=$(echo "$cert_data" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed 's/.*CN=\([^,]*\).*/\1/' || echo "")
+              if [ -n "$CERT_SUBJECT" ]; then
+                echo "  - $CERT_SUBJECT"
+                echo "    CN: $CERT_CN"
+              fi
+            fi
+          done || {
+            # Alternative method: extract all certificates as array
+            CERT_COUNT=$(echo "$PROFILE_PLIST" | plutil -extract DeveloperCertificates - - 2>/dev/null | grep -c "data" || echo "0")
+            echo "Found $CERT_COUNT certificate(s) in profile"
+            for i in $(seq 0 $((CERT_COUNT - 1))); do
+              CERT_DATA=$(echo "$PROFILE_PLIST" | plutil -extract "DeveloperCertificates.$i" raw - 2>/dev/null || echo "")
+              if [ -n "$CERT_DATA" ]; then
+                CERT_SUBJECT=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed 's/subject=//' || echo "")
+                if [ -n "$CERT_SUBJECT" ]; then
+                  echo "  Certificate $((i+1)): $CERT_SUBJECT"
+                fi
+              fi
+            done
+          }
+        else
+          echo "  WARNING: Could not extract certificates from provisioning profile"
+        fi
+        
+        # Try to find matching certificate
+        echo ""
+        echo "Available Apple Distribution certificates in keychain:"
+        echo "$DIST_CERTS"
+        echo ""
+        echo "NOTE: If certificates don't match, you need to:"
+        echo "1. Create a new provisioning profile with the certificate in keychain"
+        echo "2. Download the new profile and update IOS_PROVISIONING_PROFILE secret"
+
+    - name: Build and Archive
+      env:
+        DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      run: |
+        set -e
+        cd ios
+        echo "Cleaning workspace..."
+        xcodebuild clean \
+          -workspace webEditApp.xcworkspace \
+          -scheme webEditApp \
+          -configuration Release
+
+        echo "Building and archiving..."
+        echo "Using provisioning profile UUID: ${{ steps.install_profile.outputs.profile_uuid }}"
+        # Try with specific certificate first, if fails, let xcodebuild auto-select
+        xcodebuild archive \
+          -workspace webEditApp.xcworkspace \
+          -scheme webEditApp \
+          -configuration Release \
+          -archivePath build/webEditApp.xcarchive \
+          -destination 'generic/platform=iOS' \
+          CODE_SIGN_STYLE=Manual \
+          CODE_SIGN_IDENTITY="Apple Distribution" \
+          PROVISIONING_PROFILE_SPECIFIER="${{ steps.install_profile.outputs.profile_uuid }}" \
+          DEVELOPMENT_TEAM=${{ secrets.IOS_TEAM_ID }} \
+          ENABLE_BITCODE=NO || {
+            echo "Build failed with specific certificate, trying auto-select..."
+            # Remove CODE_SIGN_IDENTITY to let xcodebuild auto-select matching certificate
+            xcodebuild archive \
+              -workspace webEditApp.xcworkspace \
+              -scheme webEditApp \
+              -configuration Release \
+              -archivePath build/webEditApp.xcarchive \
+              -destination 'generic/platform=iOS' \
+              CODE_SIGN_STYLE=Manual \
+              PROVISIONING_PROFILE_SPECIFIER="${{ steps.install_profile.outputs.profile_uuid }}" \
+              DEVELOPMENT_TEAM=${{ secrets.IOS_TEAM_ID }} \
+              ENABLE_BITCODE=NO
+          }
+
+        echo "Archive created successfully at: build/webEditApp.xcarchive"
+
+    - name: Export IPA
+      env:
+        DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+      run: |
+        cd ios
+        xcodebuild -exportArchive \
+          -archivePath build/webEditApp.xcarchive \
+          -exportPath build/export \
+          -exportOptionsPlist ExportOptions.plist
+
+    - name: Verify IPA
+      run: |
+        ls -lh ios/build/export/*.ipa || echo "No IPA file found"
+        cd ios/build/export
+        if compgen -G "*.ipa" > /dev/null; then
+          unzip -l *.ipa | head -20
+        else
+          echo "No IPA found"
+        fi
+
+    - name: Upload IPA
+      uses: actions/upload-artifact@v4
+      with:
+        name: webEditApp-ios
+        path: ios/build/export/*.ipa
+        retention-days: 7
+
+    - name: Clean up
+      if: always()
+      run: |
+        rm -rf ios/build
+        rm -f ios/ExportOptions.plist

@@ -26,6 +26,15 @@ jobs:
       with:
         xcode-version: latest-stable
 
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+        bundler-cache: false
+
+    - name: Install CocoaPods
+      run: gem install cocoapods
+
     - name: Install dependencies
       run: npm install
 
@@ -202,6 +211,7 @@ jobs:
       env:
         DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
       run: |
+        set -e
         cd ios
         xcodebuild -exportArchive \
           -archivePath build/webEditApp.xcarchive \

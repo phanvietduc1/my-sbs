@@ -147,7 +147,7 @@ jobs:
 
         # Iterate through each certificate by index (bounded to avoid infinite loops)
         for (( i=0; i<CERT_COUNT; i++ )); do
-          CERT_DATA=$(echo "$PROFILE_PLIST" | plutil -extract "DeveloperCertificates.$i" raw - 2>/dev/null || echo "")
+          CERT_DATA=$(echo "$PROFILE_PLIST" | plutil -convert xml1 -o - - 2>/dev/null | awk -v n=$i '/<key>DeveloperCertificates<\/key>/,/<\/array>/' | grep -A1 "<data>" | sed -n "$((i+1))p" | sed 's/<[^>]*>//g' | tr -d ' ' || echo "")
           if [ -z "$CERT_DATA" ]; then
             continue
           fi

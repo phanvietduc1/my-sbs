@@ -17,6 +17,11 @@ jobs:
 
       - name: checkout repository
         uses: actions/checkout@v3
+      - name: Install CocoaPods
+        working-directory: ios   
+        run: |
+          sudo gem install cocoapods
+          pod install --repo-update
 
       - name: Install the Apple certificate and provisioning profile
         env:

@@ -125,31 +125,35 @@ jobs:
 
         echo ""
         echo "=== Decoding provisioning profile ==="
-        PROFILE_XML=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null | plutil -convert xml1 -o - - 2>/dev/null)
-        if [ -z "$PROFILE_XML" ]; then
-          echo "ERROR: Could not decode provisioning profile"
+        # Tạo plist tạm
+        PROFILE_PLIST=profile.plist
+        security cms -D -i "$PROFILE_PATH" -o "$PROFILE_PLIST"
+        if [ ! -f "$PROFILE_PLIST" ]; then
+          echo "ERROR: Failed to decode provisioning profile"
           exit 1
         fi
 
         echo "Extracting embedded certificates..."
-        CERT_BASE64_LIST=$(echo "$PROFILE_XML" | awk '/<key>DeveloperCertificates<\/key>/,/<\/array>/' | grep '<data>' | sed 's/ *<[^>]*>//g' | tr -d ' ')
-        if [ -z "$CERT_BASE64_LIST" ]; then
-          echo "ERROR: No DeveloperCertificates found in provisioning profile"
-          exit 1
-        fi
-
         PROFILE_CERT_COUNT=0
         PROFILE_CERT_CNs=""
         PROFILE_CERT_SHA1s=""
 
-        while IFS= read -r CERT_DATA; do
-          [ -z "$CERT_DATA" ] && continue
+        # Lặp qua tất cả DeveloperCertificates
+        INDEX=0
+        while true; do
+          CERT_SHA1=$(plutil -extract "DeveloperCertificates.$INDEX" raw -o - "$PROFILE_PLIST" 2>/dev/null | \
+            base64 -d 2>/dev/null | openssl x509 -noout -fingerprint -sha1 2>/dev/null | sed 's/SHA1 Fingerprint=//' | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          CERT_CN=$(plutil -extract "DeveloperCertificates.$INDEX" raw -o - "$PROFILE_PLIST" 2>/dev/null | \
+            base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed -E 's/.*CN *= *([^,]+).*/\1/')
+          
+          if [ -z "$CERT_SHA1" ] && [ -z "$CERT_CN" ]; then
+            break
+          fi
+          
           PROFILE_CERT_COUNT=$((PROFILE_CERT_COUNT+1))
-          CERT_SUBJECT=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed 's/subject=//')
-          CERT_CN=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed -E 's/.*CN *= *([^,]+).*/\1/')
-          CERT_SHA1=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -fingerprint -sha1 2>/dev/null | sed 's/SHA1 Fingerprint=//' | tr -d ':' | tr '[:upper:]' '[:lower:]')
           echo "  [$PROFILE_CERT_COUNT] CN: $CERT_CN"
           echo "      SHA1: $CERT_SHA1"
+
           if [ -n "$PROFILE_CERT_CNs" ]; then
             PROFILE_CERT_CNs="$PROFILE_CERT_CNs|$CERT_CN"
             PROFILE_CERT_SHA1s="$PROFILE_CERT_SHA1s|$CERT_SHA1"
@@ -157,7 +161,9 @@ jobs:
             PROFILE_CERT_CNs="$CERT_CN"
             PROFILE_CERT_SHA1s="$CERT_SHA1"
           fi
-        done <<< "$CERT_BASE64_LIST"
+
+          INDEX=$((INDEX+1))
+        done
 
         if [ $PROFILE_CERT_COUNT -eq 0 ]; then
           echo "ERROR: No certificates parsed from provisioning profile"
@@ -189,7 +195,7 @@ jobs:
           echo "❌ ERROR: No matching certificate found between keychain and provisioning profile"
           echo ""
           echo "Fix:"
-          echo "  - Recreate provisioning profile in Apple Developer Portal including the same certificate as in your P12"
+          echo "  - Ensure the provisioning profile includes the same certificate as in your P12"
           exit 1
         fi
 

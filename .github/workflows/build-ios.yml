@@ -137,12 +137,19 @@ jobs:
         PROFILE_CERT_CNs=""
         PROFILE_CERT_SHA1s=""
         
-        # Try to extract certificates by index until we fail (more reliable than counting)
-        i=0
-        while true; do
+        # Determine certificate count robustly from XML
+        CERT_COUNT=$(echo "$PROFILE_PLIST" | plutil -convert xml1 -o - - 2>/dev/null | grep -o "<data>" | wc -l | tr -d ' ' || echo "0")
+        # Fallback to zero if not a valid integer
+        if ! echo "$CERT_COUNT" | grep -Eq '^[0-9]+$'; then
+          CERT_COUNT=0
+        fi
+        echo "Found $CERT_COUNT certificate(s) in provisioning profile"
+
+        # Iterate through each certificate by index (bounded to avoid infinite loops)
+        for (( i=0; i<CERT_COUNT; i++ )); do
           CERT_DATA=$(echo "$PROFILE_PLIST" | plutil -extract "DeveloperCertificates.$i" raw - 2>/dev/null || echo "")
           if [ -z "$CERT_DATA" ]; then
-            break
+            continue
           fi
           
           # Extract certificate info (normalize SHA1: lowercase, no colons)
@@ -166,10 +173,7 @@ jobs:
             fi
           fi
           
-          i=$((i + 1))
         done
-        
-        echo "Found $PROFILE_CERT_COUNT certificate(s) in provisioning profile"
         
         if [ $PROFILE_CERT_COUNT -eq 0 ]; then
           echo "ERROR: No certificates found in provisioning profile"

@@ -47,13 +47,13 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
-      - name: build archive
+      - name: Build archive
+        working-directory: ios
         run: |
           xcodebuild -scheme "webEditApp" \
-          -archivePath $RUNNER_TEMP/iamgroot.xcarchive \
+          -archivePath $RUNNER_TEMP/webEditApp.xcarchive \
           -sdk iphoneos \
           -configuration Debug \
-          -destination generic/platform=iOS \
           clean archive
 
       - name: export ipa

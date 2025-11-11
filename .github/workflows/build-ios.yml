@@ -137,36 +137,39 @@ jobs:
         PROFILE_CERT_CNs=""
         PROFILE_CERT_SHA1s=""
         
-        # Get certificate count
-        CERT_COUNT=$(echo "$PROFILE_PLIST" | plutil -extract DeveloperCertificates - - 2>/dev/null | grep -c "data" || echo "0")
-        echo "Found $CERT_COUNT certificate(s) in provisioning profile"
-        
-        # Extract each certificate
-        for i in $(seq 0 $((CERT_COUNT - 1))); do
+        # Try to extract certificates by index until we fail (more reliable than counting)
+        i=0
+        while true; do
           CERT_DATA=$(echo "$PROFILE_PLIST" | plutil -extract "DeveloperCertificates.$i" raw - 2>/dev/null || echo "")
-          if [ -n "$CERT_DATA" ]; then
-            # Extract certificate info (normalize SHA1: lowercase, no colons)
-            CERT_SUBJECT=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed 's/subject=//' || echo "")
-            CERT_CN=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed -E 's/.*CN *= *([^,]+).*/\1/' || echo "")
-            CERT_SHA1=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -fingerprint -sha1 2>/dev/null | sed 's/SHA1 Fingerprint=//' | tr -d ':' | tr '[:upper:]' '[:lower:]' || echo "")
+          if [ -z "$CERT_DATA" ]; then
+            break
+          fi
+          
+          # Extract certificate info (normalize SHA1: lowercase, no colons)
+          CERT_SUBJECT=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed 's/subject=//' || echo "")
+          CERT_CN=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed -E 's/.*CN *= *([^,]+).*/\1/' || echo "")
+          CERT_SHA1=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -fingerprint -sha1 2>/dev/null | sed 's/SHA1 Fingerprint=//' | tr -d ':' | tr '[:upper:]' '[:lower:]' || echo "")
+          
+          if [ -n "$CERT_SUBJECT" ]; then
+            PROFILE_CERT_COUNT=$((PROFILE_CERT_COUNT + 1))
+            echo "  Certificate $PROFILE_CERT_COUNT:"
+            echo "    Subject: $CERT_SUBJECT"
+            echo "    CN: $CERT_CN"
+            echo "    SHA1: $CERT_SHA1"
             
-            if [ -n "$CERT_SUBJECT" ]; then
-              PROFILE_CERT_COUNT=$((PROFILE_CERT_COUNT + 1))
-              echo "  Certificate $PROFILE_CERT_COUNT:"
-              echo "    Subject: $CERT_SUBJECT"
-              echo "    CN: $CERT_CN"
-              echo "    SHA1: $CERT_SHA1"
-              
-              if [ -n "$PROFILE_CERT_CNs" ]; then
-                PROFILE_CERT_CNs="$PROFILE_CERT_CNs|$CERT_CN"
-                PROFILE_CERT_SHA1s="$PROFILE_CERT_SHA1s|$CERT_SHA1"
-              else
-                PROFILE_CERT_CNs="$CERT_CN"
-                PROFILE_CERT_SHA1s="$CERT_SHA1"
-              fi
+            if [ -n "$PROFILE_CERT_CNs" ]; then
+              PROFILE_CERT_CNs="$PROFILE_CERT_CNs|$CERT_CN"
+              PROFILE_CERT_SHA1s="$PROFILE_CERT_SHA1s|$CERT_SHA1"
+            else
+              PROFILE_CERT_CNs="$CERT_CN"
+              PROFILE_CERT_SHA1s="$CERT_SHA1"
             fi
           fi
+          
+          i=$((i + 1))
         done
+        
+        echo "Found $PROFILE_CERT_COUNT certificate(s) in provisioning profile"
         
         if [ $PROFILE_CERT_COUNT -eq 0 ]; then
           echo "ERROR: No certificates found in provisioning profile"

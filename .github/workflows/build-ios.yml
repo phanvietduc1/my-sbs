@@ -29,17 +29,11 @@ jobs:
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: '3.1'
+        ruby-version: '3.0'
         bundler-cache: false
-      # Ruby 3.1 is required for bundler 2.6.8 (specified in Gemfile.lock)
-      # The action will install bundler automatically, but Ruby 3.1 supports it
 
     - name: Install CocoaPods
-      run: |
-        # Install CocoaPods directly using gem
-        # We don't use bundler for CocoaPods installation to avoid conflicts
-        gem install cocoapods --no-document
-        pod --version
+      run: gem install cocoapods
 
     - name: Install dependencies
       run: npm install
@@ -96,7 +90,7 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
                 <key>com.gemiso.sbsnds.dev</key>
-                <string>${{ steps.install_profile.outputs.profile_uuid }}</string>
+                <string>SBS NDS</string>
             </dict>
             <key>compileBitcode</key>
             <false/>
@@ -111,6 +105,7 @@ jobs:
     - name: Verify certificates and profiles
       id: verify_certs
       run: |
+        set -e
         echo "=== Checking installed certificates ==="
         ALL_CERTS=$(security find-identity -v -p codesigning)
         echo "$ALL_CERTS"
@@ -121,55 +116,163 @@ jobs:
         fi
         echo ""
         echo "=== Checking provisioning profiles ==="
+        PROFILE_PATH=~/Library/MobileDevice/Provisioning\ Profiles/vDuc.mobileprovision
+        if [ ! -f "$PROFILE_PATH" ]; then
+          echo "ERROR: Provisioning profile not found at $PROFILE_PATH"
+          exit 1
+        fi
         ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles directory found"
         echo ""
         echo "=== Verifying certificate and profile match ==="
         # Extract certificate from provisioning profile
-        PROFILE_PLIST=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/vDuc.mobileprovision 2>/dev/null)
+        PROFILE_PLIST=$(security cms -D -i "$PROFILE_PATH" 2>/dev/null)
         if [ -z "$PROFILE_PLIST" ]; then
           echo "ERROR: Could not decode provisioning profile"
           exit 1
         fi
         
-        # Extract certificate common names from provisioning profile
-        echo "Certificates in provisioning profile:"
-        PROFILE_CERTS=$(echo "$PROFILE_PLIST" | plutil -extract DeveloperCertificates - - 2>/dev/null || echo "")
-        if [ -n "$PROFILE_CERTS" ]; then
-          echo "$PROFILE_PLIST" | plutil -extract DeveloperCertificates - - 2>/dev/null | while IFS= read -r cert_data; do
-            if [ -n "$cert_data" ] && [ "$cert_data" != "(" ] && [ "$cert_data" != ")" ]; then
-              CERT_SUBJECT=$(echo "$cert_data" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed 's/subject=//' || echo "")
-              CERT_CN=$(echo "$cert_data" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed 's/.*CN=\([^,]*\).*/\1/' || echo "")
-              if [ -n "$CERT_SUBJECT" ]; then
-                echo "  - $CERT_SUBJECT"
-                echo "    CN: $CERT_CN"
+        # Extract all certificates from provisioning profile
+        echo "Extracting certificates from provisioning profile..."
+        PROFILE_CERT_COUNT=0
+        PROFILE_CERT_CNs=""
+        PROFILE_CERT_SHA1s=""
+        
+        # Get certificate count
+        CERT_COUNT=$(echo "$PROFILE_PLIST" | plutil -extract DeveloperCertificates - - 2>/dev/null | grep -c "data" || echo "0")
+        echo "Found $CERT_COUNT certificate(s) in provisioning profile"
+        
+        # Extract each certificate
+        for i in $(seq 0 $((CERT_COUNT - 1))); do
+          CERT_DATA=$(echo "$PROFILE_PLIST" | plutil -extract "DeveloperCertificates.$i" raw - 2>/dev/null || echo "")
+          if [ -n "$CERT_DATA" ]; then
+            # Extract certificate info (normalize SHA1: lowercase, no colons)
+            CERT_SUBJECT=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed 's/subject=//' || echo "")
+            CERT_CN=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed -E 's/.*CN *= *([^,]+).*/\1/' || echo "")
+            CERT_SHA1=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -fingerprint -sha1 2>/dev/null | sed 's/SHA1 Fingerprint=//' | tr -d ':' | tr '[:upper:]' '[:lower:]' || echo "")
+            
+            if [ -n "$CERT_SUBJECT" ]; then
+              PROFILE_CERT_COUNT=$((PROFILE_CERT_COUNT + 1))
+              echo "  Certificate $PROFILE_CERT_COUNT:"
+              echo "    Subject: $CERT_SUBJECT"
+              echo "    CN: $CERT_CN"
+              echo "    SHA1: $CERT_SHA1"
+              
+              if [ -n "$PROFILE_CERT_CNs" ]; then
+                PROFILE_CERT_CNs="$PROFILE_CERT_CNs|$CERT_CN"
+                PROFILE_CERT_SHA1s="$PROFILE_CERT_SHA1s|$CERT_SHA1"
+              else
+                PROFILE_CERT_CNs="$CERT_CN"
+                PROFILE_CERT_SHA1s="$CERT_SHA1"
               fi
             fi
-          done || {
-            # Alternative method: extract all certificates as array
-            CERT_COUNT=$(echo "$PROFILE_PLIST" | plutil -extract DeveloperCertificates - - 2>/dev/null | grep -c "data" || echo "0")
-            echo "Found $CERT_COUNT certificate(s) in profile"
-            for i in $(seq 0 $((CERT_COUNT - 1))); do
-              CERT_DATA=$(echo "$PROFILE_PLIST" | plutil -extract "DeveloperCertificates.$i" raw - 2>/dev/null || echo "")
-              if [ -n "$CERT_DATA" ]; then
-                CERT_SUBJECT=$(echo "$CERT_DATA" | base64 -d 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed 's/subject=//' || echo "")
-                if [ -n "$CERT_SUBJECT" ]; then
-                  echo "  Certificate $((i+1)): $CERT_SUBJECT"
-                fi
-              fi
-            done
-          }
-        else
-          echo "  WARNING: Could not extract certificates from provisioning profile"
+          fi
+        done
+        
+        if [ $PROFILE_CERT_COUNT -eq 0 ]; then
+          echo "ERROR: No certificates found in provisioning profile"
+          exit 1
         fi
         
-        # Try to find matching certificate
         echo ""
-        echo "Available Apple Distribution certificates in keychain:"
-        echo "$DIST_CERTS"
-        echo ""
-        echo "NOTE: If certificates don't match, you need to:"
-        echo "1. Create a new provisioning profile with the certificate in keychain"
-        echo "2. Download the new profile and update IOS_PROVISIONING_PROFILE secret"
+        echo "=== Checking keychain certificates ==="
+        # Extract certificates from keychain and compare
+        KEYCHAIN_CERT_COUNT=0
+        MATCH_FOUND=false
+        
+        # Process each certificate line (avoid subshell issue)
+        IFS=$'\n'
+        for line in $DIST_CERTS; do
+          if echo "$line" | grep -q "Apple Distribution"; then
+            KEYCHAIN_CERT_COUNT=$((KEYCHAIN_CERT_COUNT + 1))
+            
+            # Extract certificate hash and name more reliably
+            CERT_HASH=$(echo "$line" | sed -E 's/.*\) ([A-F0-9]+).*/\1/' | head -c 40 || echo "")
+            CERT_NAME=$(echo "$line" | sed -E 's/.*"([^"]+Apple Distribution[^"]+)".*/\1/' || echo "")
+            
+            # Fallback: extract name without quotes
+            if [ -z "$CERT_NAME" ] || [ "$CERT_NAME" = "$line" ]; then
+              CERT_NAME=$(echo "$line" | sed -E 's/.*Apple Distribution:? *([^(]+).*/\1/' | sed 's/ *$//' || echo "Unknown")
+            fi
+            
+            echo "  Keychain Certificate $KEYCHAIN_CERT_COUNT:"
+            echo "    Name: $CERT_NAME"
+            echo "    Hash: $CERT_HASH"
+            
+            # Get certificate PEM data and extract SHA1
+            CERT_PEM=$(security find-certificate -c "$CERT_NAME" -p 2>/dev/null || echo "")
+            
+            if [ -n "$CERT_PEM" ]; then
+              CERT_SUBJECT=$(echo "$CERT_PEM" | openssl x509 -noout -subject 2>/dev/null | sed 's/subject=//' || echo "")
+              CERT_CN=$(echo "$CERT_PEM" | openssl x509 -noout -subject 2>/dev/null | sed -E 's/.*CN *= *([^,]+).*/\1/' || echo "")
+              CERT_SHA1=$(echo "$CERT_PEM" | openssl x509 -noout -fingerprint -sha1 2>/dev/null | sed 's/SHA1 Fingerprint=//' | tr -d ':' | tr '[:upper:]' '[:lower:]' || echo "")
+              
+              echo "    Subject: $CERT_SUBJECT"
+              echo "    CN: $CERT_CN"
+              echo "    SHA1: $CERT_SHA1"
+              
+              # Compare SHA1 fingerprints (normalize to lowercase, no colons)
+              if [ -n "$CERT_SHA1" ] && [ -n "$PROFILE_CERT_SHA1s" ]; then
+                # Convert profile SHA1s to same format for comparison
+                PROFILE_SHA1s_NORMALIZED=$(echo "$PROFILE_CERT_SHA1s" | tr '[:upper:]' '[:lower:]' | tr -d ' ')
+                
+                # Check if certificate SHA1 matches any profile SHA1
+                for profile_sha1 in $(echo "$PROFILE_SHA1s_NORMALIZED" | tr '|' ' '); do
+                  if [ "$CERT_SHA1" = "$profile_sha1" ]; then
+                    echo "    ✅ MATCH FOUND: Certificate SHA1 matches provisioning profile"
+                    MATCH_FOUND=true
+                    break
+                  fi
+                done
+                
+                if [ "$MATCH_FOUND" != "true" ]; then
+                  echo "    ❌ NO MATCH: Certificate SHA1 does NOT match any in provisioning profile"
+                fi
+              elif [ -n "$CERT_CN" ] && [ -n "$PROFILE_CERT_CNs" ]; then
+                # Fallback: compare by CN if SHA1 comparison fails
+                if echo "$PROFILE_CERT_CNs" | grep -q "$CERT_CN"; then
+                  echo "    ✅ MATCH FOUND: Certificate CN matches provisioning profile"
+                  MATCH_FOUND=true
+                else
+                  echo "    ❌ NO MATCH: Certificate CN does NOT match any in provisioning profile"
+                fi
+              else
+                echo "    ⚠️ WARNING: Could not compare certificates (missing SHA1 or CN)"
+              fi
+            else
+              echo "    ⚠️ WARNING: Could not extract certificate from keychain"
+            fi
+            echo ""
+          fi
+        done
+        unset IFS
+        
+        if [ $KEYCHAIN_CERT_COUNT -eq 0 ]; then
+          echo "ERROR: No Apple Distribution certificates found in keychain"
+          exit 1
+        fi
+        
+        echo "=== Verification Result ==="
+        if [ "$MATCH_FOUND" = true ]; then
+          echo "✅ SUCCESS: Found matching certificate in keychain and provisioning profile"
+        else
+          echo "❌ ERROR: No matching certificate found between keychain and provisioning profile"
+          echo ""
+          echo "Certificate mismatch detected!"
+          echo "The certificate in your keychain does not match any certificate in the provisioning profile."
+          echo ""
+          echo "To fix this issue:"
+          echo "1. Go to Apple Developer Portal: https://developer.apple.com/account/resources/profiles/list"
+          echo "2. Create a new Ad Hoc provisioning profile that includes the certificate currently in keychain"
+          echo "3. Download the new provisioning profile"
+          echo "4. Encode it to base64: base64 -i profile.mobileprovision | pbcopy"
+          echo "5. Update the IOS_PROVISIONING_PROFILE secret in GitHub with the new base64-encoded profile"
+          echo ""
+          echo "Alternatively:"
+          echo "1. Export the certificate from the provisioning profile"
+          echo "2. Import it into your keychain"
+          echo "3. Update the IOS_CERT_P12 secret with the new certificate"
+          exit 1
+        fi
 
     - name: Build and Archive
       env:

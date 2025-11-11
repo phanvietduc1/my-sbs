@@ -29,11 +29,11 @@ jobs:
     - name: Setup Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: '3.0'
-        bundler-cache: false
+        ruby-version: '3.1'
+        bundler-cache: true
 
     - name: Install CocoaPods
-      run: gem install cocoapods
+      run: bundle install
 
     - name: Install dependencies
       run: npm install

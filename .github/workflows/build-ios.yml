@@ -72,9 +72,10 @@ jobs:
             -scheme webEditApp \
             -archivePath $RUNNER_TEMP/webEditApp.xcarchive \
             -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
             -configuration Release \
             CODE_SIGN_IDENTITY="Apple Distribution: Gemini Soft Co., Ltd. (LA2TGF2T65)" \
-            PROVISIONING_PROFILE_SPECIFIER="vDuc" \
+            PROVISIONING_PROFILE_SPECIFIER=vDuc \
             DEVELOPMENT_TEAM=LA2TGF2T65 \
             clean archive \
             -allowProvisioningUpdates

@@ -67,7 +67,6 @@ jobs:
           -archivePath $RUNNER_TEMP/webEditApp.xcarchive \
           -sdk iphoneos \
           -configuration Debug \
-          -allowProvisioningUpdates \
           clean archive
 
       - name: export ipa

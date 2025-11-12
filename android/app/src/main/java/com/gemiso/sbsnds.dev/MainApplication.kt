@@ -15,6 +15,7 @@ import com.facebook.react.flipper.ReactNativeFlipper
 import com.facebook.soloader.SoLoader
 import com.gemiso.sbsnds.dev.customview.CustomWebViewManager
 import com.webeditapp.FileOpenerModule
+import com.webeditapp.DownloadModule
 
 class MainApplication : Application(), ReactApplication {
 
@@ -27,7 +28,8 @@ class MainApplication : Application(), ReactApplication {
                 override fun createNativeModules(reactContext: ReactApplicationContext) = 
                   listOf<NativeModule>(
                     GoogleMeetModule(reactContext),
-                    FileOpenerModule(reactContext)
+                    FileOpenerModule(reactContext),
+                    DownloadModule(reactContext)
                   )
                   
                 override fun createViewManagers(reactContext: ReactApplicationContext) =

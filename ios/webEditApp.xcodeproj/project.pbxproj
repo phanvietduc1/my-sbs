@@ -512,7 +512,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = LA2TGF2T65;
-				ENABLE_BITCODE = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = webEditApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
@@ -529,7 +528,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.gemiso.sbsnds.dev;
 				PRODUCT_NAME = webEditApp;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = vDuc;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				new = "";

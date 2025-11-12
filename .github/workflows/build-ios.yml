@@ -60,14 +60,24 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
+      - name: Debug provisioning
+        run: |
+          ls ~/Library/MobileDevice/Provisioning\ Profiles
+          security find-identity -v -p codesigning
+
       - name: Build archive
         working-directory: ios
         run: |
-          xcodebuild -scheme "webEditApp" \
-          -archivePath $RUNNER_TEMP/webEditApp.xcarchive \
-          -sdk iphoneos \
-          -configuration Debug \
-          clean archive
+          xcodebuild -workspace webEditApp.xcworkspace \
+            -scheme webEditApp \
+            -archivePath $RUNNER_TEMP/webEditApp.xcarchive \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="Apple Distribution: Gemini Soft Co., Ltd. (LA2TGF2T65)" \
+            PROVISIONING_PROFILE_SPECIFIER="vDuc" \
+            DEVELOPMENT_TEAM=LA2TGF2T65 \
+            clean archive \
+            -allowProvisioningUpdates
 
       - name: export ipa
         env:

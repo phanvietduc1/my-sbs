@@ -65,6 +65,9 @@ jobs:
           ls ~/Library/MobileDevice/Provisioning\ Profiles
           security find-identity -v -p codesigning
 
+      - name: Fix Hermes permission
+        run: chmod +x ios/Pods/hermes-engine/utils/build-ios.sh
+
       - name: Build archive
         working-directory: ios
         run: |

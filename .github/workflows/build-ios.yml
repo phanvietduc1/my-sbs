@@ -22,13 +22,10 @@ jobs:
       - name: Install Node.js dependencies
         run: npm ci
 
-      - name: Install Ruby gems
-        run: |
-          gem install bundler -v 2.6.8
-          bundle install --path vendor/bundle
-
       - name: Install CocoaPods
-        run: bundle exec pod install --repo-update --project-directory=ios
+        run: sudo gem install cocoapods -v 1.14.3
+      - name: Run pod install
+        run: pod install --repo-update --project-directory=ios
 
       - name: Install the Apple certificate and provisioning profile
         env:

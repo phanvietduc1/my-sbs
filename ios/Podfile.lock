@@ -1120,6 +1120,8 @@ PODS:
     - React-Core
   - RNCAsyncStorage (2.2.0):
     - React-Core
+  - RNCClipboard (1.16.3):
+    - React-Core
   - RNFS (2.20.0):
     - React-Core
   - RNKeychain (10.0.0):
@@ -1205,6 +1207,7 @@ DEPENDENCIES:
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - RNAudioRecorderPlayer (from `../node_modules/react-native-audio-recorder-player`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
+  - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
   - RNFS (from `../node_modules/react-native-fs`)
   - RNKeychain (from `../node_modules/react-native-keychain`)
   - "RNNotifee (from `../node_modules/@notifee/react-native`)"
@@ -1331,6 +1334,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-audio-recorder-player"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
+  RNCClipboard:
+    :path: "../node_modules/@react-native-clipboard/clipboard"
   RNFS:
     :path: "../node_modules/react-native-fs"
   RNKeychain:
@@ -1406,6 +1411,7 @@ SPEC CHECKSUMS:
   ReactCommon: 2947b0bffd82ea0e58ca7928881152d4c6dae9af
   RNAudioRecorderPlayer: 224c7de87722938aedce04000d09baa633148f5b
   RNCAsyncStorage: 23e56519cc41d3bade3c8d4479f7760cb1c11996
+  RNCClipboard: dfeb43751adff21e588657b5b6c888c72f3aa68e
   RNFS: 4ac0f0ea233904cb798630b3c077808c06931688
   RNKeychain: 8e9dca1024b65a40f856deb7c16eea8d9e715086
   RNNotifee: 4a6ee5c7deaf00e005050052d73ee6315dff7ec9
@@ -1416,6 +1422,6 @@ SPEC CHECKSUMS:
   TouchID: ba4c656d849cceabc2e4eef722dea5e55959ecf4
   Yoga: a716eea57d0d3430219c0a5a233e1e93ee931eb7
 
-PODFILE CHECKSUM: 70755d49f5d6728c6372bef6ed5ec704ca84c2b7
+PODFILE CHECKSUM: c6629dd4041a40aa73bad5e0c5816d4721304eae
 
 COCOAPODS: 1.16.2

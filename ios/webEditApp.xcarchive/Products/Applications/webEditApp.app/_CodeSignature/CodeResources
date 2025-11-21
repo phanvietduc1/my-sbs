@@ -74,7 +74,7 @@
 		</data>
 		<key>Frameworks/OneSignalCore.framework/OneSignalCore</key>
 		<data>
-		vw1f5SvFHRPiP6PFaeVhV+YbwLU=
+		kRJO84ldVAVZe+xHlfeQDAi50Xo=
 		</data>
 		<key>Frameworks/OneSignalCore.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -90,7 +90,7 @@
 		</data>
 		<key>Frameworks/OneSignalExtension.framework/OneSignalExtension</key>
 		<data>
-		iCUvCPJHwT779XgXRztbgX4jU48=
+		W9Mmsdjuccyylmlbsdd5U31bsLU=
 		</data>
 		<key>Frameworks/OneSignalExtension.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -106,7 +106,7 @@
 		</data>
 		<key>Frameworks/OneSignalFramework.framework/OneSignalFramework</key>
 		<data>
-		WgvklSjbsINJtFgGmTicWPxUSRg=
+		5ijYlSVZskWVSsIP43vX0gO1rvA=
 		</data>
 		<key>Frameworks/OneSignalFramework.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -122,7 +122,7 @@
 		</data>
 		<key>Frameworks/OneSignalInAppMessages.framework/OneSignalInAppMessages</key>
 		<data>
-		YjW5/ubV3soLlcj0U4nIA/EVtP8=
+		oEOAtviXUR9rae+u5ho6SdPbP3U=
 		</data>
 		<key>Frameworks/OneSignalInAppMessages.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -138,7 +138,7 @@
 		</data>
 		<key>Frameworks/OneSignalLiveActivities.framework/OneSignalLiveActivities</key>
 		<data>
-		ZwFIR+mTIxmrlOMNKPvVefaCbg0=
+		BM5ig3XbwVvplVhgP6EJnZApU8E=
 		</data>
 		<key>Frameworks/OneSignalLiveActivities.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -154,7 +154,7 @@
 		</data>
 		<key>Frameworks/OneSignalLocation.framework/OneSignalLocation</key>
 		<data>
-		TCwBCQZmnTeGf7HmeMsEbARFI5o=
+		BU7GDF19sOlz6QGWM2G/LsiZRW4=
 		</data>
 		<key>Frameworks/OneSignalLocation.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -170,7 +170,7 @@
 		</data>
 		<key>Frameworks/OneSignalNotifications.framework/OneSignalNotifications</key>
 		<data>
-		l/BIUNmoTF+IXqweNLqeKZz5PDY=
+		Sbt/NoFTjkCeiYdte/8FPBgrPz8=
 		</data>
 		<key>Frameworks/OneSignalNotifications.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -186,7 +186,7 @@
 		</data>
 		<key>Frameworks/OneSignalOSCore.framework/OneSignalOSCore</key>
 		<data>
-		ekcB5kUMp+QtVhTyu5Mm6dPGxDg=
+		w5DFLI/2ltS48jSYECCq9DpA//w=
 		</data>
 		<key>Frameworks/OneSignalOSCore.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -202,7 +202,7 @@
 		</data>
 		<key>Frameworks/OneSignalOutcomes.framework/OneSignalOutcomes</key>
 		<data>
-		lZbuqkVnvpKeskx37qJTJvG9jLY=
+		cKRBg800qpWDwIfuZA41M8cyiFo=
 		</data>
 		<key>Frameworks/OneSignalOutcomes.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -218,7 +218,7 @@
 		</data>
 		<key>Frameworks/OneSignalUser.framework/OneSignalUser</key>
 		<data>
-		RM/GwYpcF26/bEjnDfq5OpRNAq4=
+		E75hwI/eQwpFsTWYsojSb4E/b24=
 		</data>
 		<key>Frameworks/OneSignalUser.framework/PrivacyInfo.xcprivacy</key>
 		<data>
@@ -238,7 +238,7 @@
 		</data>
 		<key>Frameworks/hermes.framework/hermes</key>
 		<data>
-		mC2a5NbnnNtAmuV2Mr9dMe3h9r0=
+		Tm7BYgdoQlBir5JsYoOxbs5yusQ=
 		</data>
 		<key>Info.plist</key>
 		<data>
@@ -975,7 +975,7 @@
 		</data>
 		<key>main.jsbundle</key>
 		<data>
-		387Su0eXGydm17HbdXErnl+3JAM=
+		AGmf0noktLfbwO4ep+nYmqPTtJM=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -1103,7 +1103,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			NSyjMAWjPWK3dTPJb7vAjZE0dBJvpTufIGujQdYu4BI=
+			kN13miG3C2e0ctA9sAVi4/TgigSrlk+mS2ijQ5mL3tI=
 			</data>
 		</dict>
 		<key>Frameworks/OneSignalCore.framework/PrivacyInfo.xcprivacy</key>
@@ -1131,7 +1131,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			bVHPm8O2edt2QAG+z7twLFCMbI7LjMa4uhTKiWR+SeU=
+			+rNEsJudnfAicE7MFefQnsuUGOEaDXAGc8p+3CIYWNc=
 			</data>
 		</dict>
 		<key>Frameworks/OneSignalExtension.framework/PrivacyInfo.xcprivacy</key>
@@ -1159,7 +1159,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Yb1bT+Guroe+yOTC1GDZtzIlUDz2qWmeXUMqhi8m//g=
+			8j/IBsHyagjhQm5wSNlkGMnyGxa8tuz1KmUzQ3diwig=
 			</data>
 		</dict>
 		<key>Frameworks/OneSignalFramework.framework/PrivacyInfo.xcprivacy</key>
@@ -1187,7 +1187,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			SEuCgNF/j4JHD7WFkJhiAB2DL10+n2ACB0JPUpg/LeU=
+			enjg9dXN+PweZGI45KKtOiV42DiFXgOyiDBHPeZ2RfM=
 			</data>
 		</dict>
 		<key>Frameworks/OneSignalInAppMessages.framework/PrivacyInfo.xcprivacy</key>
@@ -1215,7 +1215,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			C6f2ObZYVsucSxcJH+b8LkXUh4xYsR4kW8kOau+wJgI=
+			rA02dvLnzQoyxat2VHrK6heHbArhtAbVIPZcobIQ0rY=
 			</data>
 		</dict>
 		<key>Frameworks/OneSignalLiveActivities.framework/PrivacyInfo.xcprivacy</key>
@@ -1243,7 +1243,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			2R9pXSSQWwCo2BhEog7tuKZs6siOwTpxRKVDWBpUx5w=
+			bng/ORlrkoj4yywiPFkIXHoWCvdMpMtS1l4e4lfN0PA=
 			</data>
 		</dict>
 		<key>Frameworks/OneSignalLocation.framework/PrivacyInfo.xcprivacy</key>
@@ -1271,7 +1271,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			COv5r06fCO72IwHx6gG5z4cIOzg78itzrMgG+D3zga0=
+			FIkVTfWlg/Xftor3DMX3MgEomrRZDTnyI5ipIbI5/s0=
 			</data>
 		</dict>
 		<key>Frameworks/OneSignalNotifications.framework/PrivacyInfo.xcprivacy</key>
@@ -1299,7 +1299,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ASWqVW26o7kuNtwMMydbEFIzxjT5TgBHalstYDUIQMA=
+			CgOD3mQfx0oBxW1gnldopDJ+YoJCSy/lKe3GEgRJWyg=
 			</data>
 		</dict>
 		<key>Frameworks/OneSignalOSCore.framework/PrivacyInfo.xcprivacy</key>
@@ -1327,7 +1327,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			6sZEXZL6tdUTe6JGZFF6ikGxD1Meq6GMPWkhMGRlVmM=
+			41/Tny1zKRhw9tRI2eVBGqh2Q4Gn0HeKZFBuZ9wsqgA=
 			</data>
 		</dict>
 		<key>Frameworks/OneSignalOutcomes.framework/PrivacyInfo.xcprivacy</key>
@@ -1355,7 +1355,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			4mzQRqHwREXhpd1LOjY4Nl7zl5qqiafi0pg2z8br0P0=
+			OcmPHXcF6PqIdBki+IcnpCjdK/vZQTobGajCLy5sBPc=
 			</data>
 		</dict>
 		<key>Frameworks/OneSignalUser.framework/PrivacyInfo.xcprivacy</key>
@@ -1390,7 +1390,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			wzheG1s6vJ0gRJ2Wlhb64ptXhhef/SvisLyz92fVU5U=
+			zRoO8FUNWs5QcbBKGqwNQHxCHsG9jBG1240ghwSM92M=
 			</data>
 		</dict>
 		<key>Ionicons.ttf</key>
@@ -2173,7 +2173,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ZAsDBQeSbbqPgHO3LoUYEJc29WLipygd3XO1QfV68Ko=
+			EgVSGlTcNSTVwOD0wktcSpJEFp6iKPkpgK2U2RwPq5c=
 			</data>
 		</dict>
 	</dict>
